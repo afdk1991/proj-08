@@ -1,0 +1,20 @@
+# Render 免费 Web Service 蓝图（https://render.com）。
+# 用法：Render 控制台 → New → Blueprint → 选本仓库 → 自动读取本文件。
+# 免费版会闲置休眠，首次请求冷启动约 30~50 秒。
+services:
+  - type: web
+    name: price-probe-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python -m playwright install chromium || true
+    startCommand: python server.py --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PC_TIMEOUT
+        value: "12"
+      # 可选：按需在 Render 后台逐个填入各平台登录 Cookie（不要提交到仓库）
+      # - key: PC_COOKIE_JD
+      #   sync: false
+      # - key: PRICE_COLLECTOR_BROWSER
+      #   value: "0"   # 免费实例内存有限，Chromium 渲染可能 OOM，默认关；内存充足再开

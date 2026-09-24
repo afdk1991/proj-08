@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>比价探针 · 跨平台电商价格采集与对比</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+  <!-- 顶栏 -->
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path><path d="M8 11h6M11 8v6"></path>
+          </svg>
+        </span>
+        <span class="brand__name">比价探针<small>PriceProbe</small></span>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换深色 / 浅色主题" title="切换主题">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero 指挥台 -->
+  <section class="hero">
+    <div class="hero__inner">
+      <div class="hero__copy">
+        <span class="hero__eyebrow">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 3 5-6"></path></svg>
+          31 大平台 · 一站式真实比价
+        </span>
+        <h1>跨平台电商<br/>比价分析仪表盘</h1>
+        <p class="hero__sub">输入关键词，一键真实采集 31 个电商平台商品，自动清洗去重、价格排序、横向对比，并给出透明可解释的性价比推荐。</p>
+      </div>
+
+      <form id="search-form" class="search" role="search" aria-label="商品价格采集">
+        <div class="search__field">
+          <svg class="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+          <input id="keyword" class="kw-input" type="text" placeholder="输入商品关键词，如：蓝牙耳机" value="" aria-label="商品关键词" />
+          <button id="btn-search" class="btn btn--primary" type="submit">开始采集</button>
+        </div>
+        <div class="search__opts">
+          <span class="opts__label">平台</span>
+          <div id="platform-chips" class="chips"></div>
+          <span class="opts__sep" aria-hidden="true"></span>
+          <span class="opts__label">数据源</span>
+          <span class="source-badge" title="仅真实抓取；被反爬拦截的平台会自动返回空，绝不伪造数据">真实抓取 · live</span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <main class="container">
+    <!-- 状态 / 加载提示 -->
+    <div id="status" class="status hidden" role="status" aria-live="polite">
+      <span class="status__dot"></span><span id="status-text"></span>
+    </div>
+
+    <!-- KPI 概览 -->
+    <section id="kpi" class="kpi" aria-label="概览指标"></section>
+
+    <!-- 图表区 -->
+    <div class="grid grid--2">
+      <article class="card">
+        <div class="card__head"><h2 class="card__title">价格趋势</h2><span class="card__hint">按价格升序</span></div>
+        <div id="chart-trend" class="chart"></div>
+      </article>
+      <article class="card">
+        <div class="card__head"><h2 class="card__title">平台横向对比</h2><span class="card__hint">最低 / 均价 / 最高</span></div>
+        <div id="chart-compare" class="chart"></div>
+      </article>
+    </div>
+
+    <article class="card">
+      <div class="card__head"><h2 class="card__title">价格区间分布</h2><span class="card__hint">等分区间商品数</span></div>
+      <div id="chart-dist" class="chart chart--wide"></div>
+    </article>
+
+    <!-- 性价比推荐 -->
+    <article class="card">
+      <div class="card__head"><h2 class="card__title">性价比推荐 TOP</h2><span class="card__hint">透明加权评分</span></div>
+      <div id="recommend" class="recs"></div>
+    </article>
+
+    <!-- 商品对比表 -->
+    <article class="card">
+      <div class="card__head"><h2 class="card__title">商品横向对比</h2><span class="card__hint">价格从低到高</span></div>
+      <div class="table-wrap">
+        <table class="product-table">
+          <thead>
+            <tr>
+              <th>#</th><th>平台</th><th>图片</th><th>商品名称</th>
+              <th class="num">价格(¥)</th><th class="num">原价(¥)</th>
+              <th class="num">销量</th><th class="num">店铺评分</th>
+              <th>店铺</th><th>性价比</th><th>链接</th>
+            </tr>
+          </thead>
+          <tbody id="product-body"></tbody>
+        </table>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <strong>比价探针 PriceProbe</strong> · 真实采集 31 个电商平台 · 被反爬拦截的平台返回空结果属正常 · 需登录平台请在后端注入对应 Cookie（PC_COOKIE_&lt;平台&gt;）
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

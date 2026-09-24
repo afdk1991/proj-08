@@ -1,0 +1,24 @@
+{
+  "run": {
+    "conclusion": "success",
+    "databaseId": 35356460122,
+    "status": "completed"
+  },
+  "deploy_url": "https://price-collector-demo-j4ml6bw0.edgeone.cool?eo_token=d98e06eae72a57c91c99fb95e5366856&eo_time=1790168824",
+  "http": {
+    "index": {
+      "status": 200,
+      "len": 5746,
+      "head": "<!DOCTYPE html>\n<html lang=\"zh-CN\" data-theme=\"light\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>比价探针 · "
+    },
+    "health": {
+      "status": 200,
+      "len": 75,
+      "head": "{\"status\": \"ok\", \"service\": \"price-collector-api\", \"runtime\": \"python3.10\"}"
+    },
+    "search": {
+      "error": "<HTTPError 404: 'Not Found'>"
+    },
+    "search_parse_error": "<HTTPError 404: 'Not Found'>"
+  }
+}

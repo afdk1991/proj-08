@@ -1,0 +1,8 @@
+# 本项目默认纯 Python 标准库实现，零第三方运行时依赖即可运行。
+# 以下为【可选】增强依赖：仅当需要"浏览器渲染层"为反爬/JS 重平台出数据时安装。
+# 不安装时 price_collector/sources/_browser.py 会自动静默降级，不影响主流程。
+#
+#   pip install playwright
+#   python -m playwright install chromium
+#
+playwright>=1.40  # optional: PRICE_COLLECTOR_BROWSER=1 时启用

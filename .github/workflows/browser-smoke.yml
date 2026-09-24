@@ -1,0 +1,47 @@
+name: Browser render smoke (optional)
+
+# 手动触发：安装 playwright + chromium，对 1 个可渲染平台跑通"渲染→解析出数"。
+# 不阻塞、不触发 EdgeOne 部署；验证后可忽略失败（反爬强时渲染也可能拿不到商品）。
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "要冒烟的平台键"
+        default: "amazon"
+        type: choice
+        options: ["amazon", "shopee", "temu", "vip"]
+      keyword:
+        description: "搜索关键词"
+        default: "headphones"
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PRICE_COLLECTOR_BROWSER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install playwright + chromium
+        run: |
+          pip install playwright
+          python -m playwright install chromium --with-deps
+      - name: Render and parse
+        run: |
+          python -c "
+          import os
+          from price_collector.sources.base import SourceFactory
+          SourceFactory.init_registry()
+          src = SourceFactory.create('${{ inputs.platform }}', timeout=30)
+          ps = src.fetch('${{ inputs.keyword }}', page=1, page_size=10)
+          print('parsed', len(ps), 'products')
+          for p in ps[:3]:
+              print('-', p.platform, p.price, p.name[:60])
+          assert isinstance(ps, list)
+          "

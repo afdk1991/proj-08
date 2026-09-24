@@ -1,0 +1,70 @@
+﻿# ============================================================================
+#  项目008 — 价格采集平台（Python 采集管道 + FastAPI 服务 + 静态前端）忽略规则
+#
+#  web/ 下的 index.html / app.js / style.css / static_demo.html 是可部署的
+#  静态前端，必须入库。data/sample.csv 与 sample.json 是演示样例数据，保留。
+#  采集运行产生的真实数据与缓存必须排除。
+# ============================================================================
+
+# ===== Python 缓存与虚拟环境 =====
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# ===== 环境与凭据（绝不入库）=====
+.env
+.env.local
+.env.*.local
+**/.env
+!**/.env.example
+
+# ===== 采集运行时产生的数据（样例数据除外）=====
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+data/*.json.gz
+data/*.csv.gz
+data/raw/
+data/cache/
+data/output/
+data/collected/
+!data/sample.csv
+!data/sample.json
+
+# ===== 构建产物与打包 =====
+dist/
+build/
+*.zip
+*.tar.gz
+
+# ===== 日志 =====
+*.log
+logs/
+
+# ===== 系统与编辑器临时文件 =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# ===== 助手内部数据（绝不入库）=====
+.workbuddy/
+
+# ===== 本地部署产物 / EdgeOne 项目元数据 =====
+.edgeone/
+
+# ===== 本地部署产物 / 临时文件（CI 会从源码重新构建）=====
+static-site/
+deploy/
+_verify.py
+data/result_*.json

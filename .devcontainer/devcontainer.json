@@ -1,0 +1,25 @@
+{
+  "name": "price-probe",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "pip install -r requirements.txt && python -m playwright install chromium || true",
+  "postStartCommand": "if ! curl -s -o /dev/null http://localhost:8765/api/health; then nohup python server.py --host 0.0.0.0 --port 8765 >/tmp/pp-server.log 2>&1 & fi",
+  "features": {
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
+    }
+  },
+  "forwardPorts": [8765],
+  "portsAttributes": {
+    "8765": { "label": "price-probe", "onAutoForward": "notify" }
+  },
+  "containerEnv": {
+    "HOST": "0.0.0.0",
+    "PORT": "8765",
+    "PC_TIMEOUT": "12"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": { "terminal.integrated.defaultProfile.linux": "bash" }
+    }
+  }
+}
