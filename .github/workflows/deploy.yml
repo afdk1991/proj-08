@@ -27,6 +27,26 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Write CPS credentials into price_collector/_cps_config.py
+        # EdgeOne 云函数运行时不注入 GitHub Secrets，这里在构建时把凭据写成
+        # 模块级常量，部署包随代码上传。未配置的平台留空字符串。
+        env:
+          TB_APPKEY: ${{ secrets.PC_CPS_TB_APPKEY }}
+          TB_SECRET: ${{ secrets.PC_CPS_TB_SECRET }}
+          TB_ADZONE: ${{ secrets.PC_CPS_TB_ADZONE }}
+          JD_APPKEY: ${{ secrets.PC_CPS_JD_APPKEY }}
+          JD_SECRET: ${{ secrets.PC_CPS_JD_SECRET }}
+        run: |
+          cat > price_collector/_cps_config.py <<EOF
+          # Auto-generated at build time from GitHub Secrets. Do not edit.
+          TB_APPKEY = "${TB_APPKEY}"
+          TB_SECRET = "${TB_SECRET}"
+          TB_ADZONE = "${TB_ADZONE}"
+          JD_APPKEY = "${JD_APPKEY}"
+          JD_SECRET = "${JD_SECRET}"
+          EOF
+          echo "written (values hidden)"
+
       - name: Assemble full Makers project (static + cloud-functions)
         # build_deploy.py 仅依赖 Python 标准库：
         # 把 web 前端 + price_collector 采集包 + cloud-functions 组装到 deploy/

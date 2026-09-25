@@ -32,9 +32,16 @@ class TbCpsSource(BaseSource):
     platform_name = "淘宝联盟(官方API)"
 
     def __init__(self, timeout: int = 10, **kwargs):
-        self.appkey = os.environ.get("PC_CPS_TB_APPKEY", "")
-        self.secret = os.environ.get("PC_CPS_TB_SECRET", "")
-        self.adzone = os.environ.get("PC_CPS_TB_ADZONE", "")
+        # 优先环境变量，回退到构建时写入的 _cps_config（EdgeOne 云函数无环境变量注入）
+        _cfg = {}
+        try:
+            from .. import _cps_config  # type: ignore
+            _cfg = {k: getattr(_cps_config, k, "") for k in dir(_cps_config)}
+        except Exception:
+            pass
+        self.appkey = os.environ.get("PC_CPS_TB_APPKEY", "") or _cfg.get("TB_APPKEY", "")
+        self.secret = os.environ.get("PC_CPS_TB_SECRET", "") or _cfg.get("TB_SECRET", "")
+        self.adzone = os.environ.get("PC_CPS_TB_ADZONE", "") or _cfg.get("TB_ADZONE", "")
         try:
             self.timeout = int(timeout or os.environ.get("PC_TIMEOUT", "10"))
         except (ValueError, TypeError):

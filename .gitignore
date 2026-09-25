@@ -68,3 +68,6 @@ static-site/
 deploy/
 _verify.py
 data/result_*.json
+
+# CPS credentials (build-generated, never commit)
+price_collector/_cps_config.py

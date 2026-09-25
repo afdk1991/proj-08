@@ -31,8 +31,14 @@ class JdCpsSource(BaseSource):
     platform_name = "京东联盟(官方API)"
 
     def __init__(self, timeout: int = 10, **kwargs):
-        self.appkey = os.environ.get("PC_CPS_JD_APPKEY", "")
-        self.secret = os.environ.get("PC_CPS_JD_SECRET", "")
+        _cfg = {}
+        try:
+            from .. import _cps_config  # type: ignore
+            _cfg = {k: getattr(_cps_config, k, "") for k in dir(_cps_config)}
+        except Exception:
+            pass
+        self.appkey = os.environ.get("PC_CPS_JD_APPKEY", "") or _cfg.get("JD_APPKEY", "")
+        self.secret = os.environ.get("PC_CPS_JD_SECRET", "") or _cfg.get("JD_SECRET", "")
         try:
             self.timeout = int(timeout or os.environ.get("PC_TIMEOUT", "10"))
         except (ValueError, TypeError):
