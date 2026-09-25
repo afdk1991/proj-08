@@ -36,10 +36,10 @@
       <div class="hero__copy">
         <span class="hero__eyebrow">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 3 5-6"></path></svg>
-          31 大平台 · 一站式真实比价
+          33 大平台 · 一站式真实比价
         </span>
         <h1>跨平台电商<br/>比价分析仪表盘</h1>
-        <p class="hero__sub">输入关键词，一键真实采集 31 个电商平台商品，自动清洗去重、价格排序、横向对比，并给出透明可解释的性价比推荐。</p>
+        <p class="hero__sub">输入关键词，一键真实采集 33 个电商平台商品，自动清洗去重、价格排序、横向对比，并给出透明可解释的性价比推荐与 AI 智能洞察。</p>
       </div>
 
       <form id="search-form" class="search" role="search" aria-label="商品价格采集">
@@ -67,6 +67,19 @@
 
     <!-- KPI 概览 -->
     <section id="kpi" class="kpi" aria-label="概览指标"></section>
+
+    <!-- AI 智能洞察 -->
+    <article id="ai-card" class="card ai-card">
+      <div class="card__head">
+        <h2 class="card__title">
+          <span class="ai-badge">AI</span>智能洞察
+        </h2>
+        <button id="btn-ai" class="btn btn--ai" type="button" disabled>AI 智能分析</button>
+      </div>
+      <div id="ai-insights" class="ai-insights">
+        <div class="ai-placeholder">采集到商品后，点击「AI 智能分析」，由大模型给出最划算推荐、价格区间解读与避坑建议。</div>
+      </div>
+    </article>
 
     <!-- 图表区 -->
     <div class="grid grid--2">
@@ -111,7 +124,7 @@
   </main>
 
   <footer class="footer">
-    <strong>比价探针 PriceProbe</strong> · 真实采集 31 个电商平台 · 被反爬拦截的平台返回空结果属正常 · 需登录平台请在后端注入对应 Cookie（PC_COOKIE_&lt;平台&gt;）
+    <strong>比价探针 PriceProbe</strong> · 真实采集 33 个电商平台 · 被反爬拦截的平台返回空结果属正常 · 需登录平台请在后端注入对应 Cookie（PC_COOKIE_&lt;平台&gt;）· AI 洞察需配置 PC_AI_API_KEY
   </footer>
 
   <script src="/app.js"></script>

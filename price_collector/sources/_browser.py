@@ -41,9 +41,19 @@ def render_html(url: str, timeout: int = 25, cookie: str = "",
     browser = None
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True, args=[
-                "--no-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled",
-            ])
+            args = [
+                "--no-sandbox", "--disable-dev-shm-usage",
+                "--disable-blink-features=AutomationControlled",
+            ]
+            # 优先本机真实 Chrome（channel=chrome），失败回退 Playwright Chromium
+            for extra in ({"channel": "chrome"}, {}):
+                try:
+                    browser = p.chromium.launch(headless=True, args=args, **extra)
+                    break
+                except Exception:
+                    browser = None
+            if browser is None:
+                return ""
             ctx = browser.new_context(user_agent=_DEFAULT_UA, locale="zh-CN")
             if cookie:
                 from urllib.parse import urlparse

@@ -1,6 +1,6 @@
 /* 比价探针前端逻辑：调用后端 /api/search 并渲染结果与图表 */
 
-/* 31 平台权威清单（与后端 price_collector/sources/registry.py 一致） */
+/* 33 平台权威清单（与后端 price_collector/sources/registry.py 一致） */
 const PLATFORMS = [
   ["jd", "京东"], ["taobao", "淘宝"], ["pdd", "拼多多"], ["tmall", "天猫"],
   ["vip", "唯品会"], ["suning", "苏宁易购"], ["douyin", "抖音电商"],
@@ -12,6 +12,7 @@ const PLATFORMS = [
   ["tmallglobal", "天猫国际"], ["jdglobal", "京东国际"], ["kaola", "考拉海购"], ["douyinglobal", "抖音全球购"],
   ["temu", "Temu"], ["shein", "SHEIN"], ["tiktokshop", "TikTok Shop"],
   ["aliexpress", "AliExpress"], ["shopee", "Shopee"], ["lazada", "Lazada"], ["amazon", "Amazon"],
+  ["tb_cps", "淘宝联盟"], ["jd_cps", "京东联盟"],
 ];
 const PLATFORM_NAMES = {};
 const PLATFORM_COLORS = {
@@ -23,6 +24,7 @@ const PLATFORM_COLORS = {
   tmallglobal: "#ff0036", jdglobal: "#e1251b", kaola: "#00a0e9", douyinglobal: "#161823",
   temu: "#fb7701", shein: "#f50046", tiktokshop: "#000000", aliexpress: "#e62e04",
   shopee: "#ee4d2d", lazada: "#1a4ea1", amazon: "#ff9900",
+  tb_cps: "#ff4400", jd_cps: "#e1251b",
 };
 PLATFORMS.forEach(([k, n]) => { PLATFORM_NAMES[k] = n; });
 
@@ -61,7 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderChips();
   initCharts();
   document.getElementById("search-form").addEventListener("submit", onSearch);
-  showStatus("输入关键词后点击「开始采集」，将真实请求所选 31 个平台", "ok");
+  document.getElementById("btn-ai").addEventListener("click", runAiAnalysis);
+  showStatus("输入关键词后点击「开始采集」，将真实请求所选 33 个平台", "ok");
 });
 
 function initCharts() {
@@ -154,12 +157,82 @@ function showStatus(msg, type) {
 /* ---------- 渲染分发 ---------- */
 function render(data) {
   renderKpi(data);
+  resetAiCard(data);
   renderTrend(data);
   renderCompare(data);
   renderDist(data);
   renderRecommend(data);
   renderTable(data);
 }
+
+/* ---------- AI 智能洞察 ---------- */
+function resetAiCard(data) {
+  const btn = document.getElementById("btn-ai");
+  const box = document.getElementById("ai-insights");
+  const has = data && (data.total > 0) && (data.products || []).length > 0;
+  btn.disabled = !has;
+  btn.textContent = "AI 智能分析";
+  box.innerHTML = has
+    ? '<div class="ai-placeholder">已就绪，点击右上角「AI 智能分析」获取大模型比价结论。</div>'
+    : '<div class="ai-placeholder">采集到商品后，点击「AI 智能分析」，由大模型给出最划算推荐、价格区间解读与避坑建议。</div>';
+}
+
+async function runAiAnalysis() {
+  if (!lastData || !lastData.total) return;
+  const keyword = lastData.keyword;
+  const platforms = selectedPlatforms();
+  const btn = document.getElementById("btn-ai");
+  const box = document.getElementById("ai-insights");
+  btn.disabled = true;
+  btn.textContent = "分析中…";
+  box.innerHTML = '<div class="ai-loading"><span class="status__dot"></span> 大模型正在分析真实商品数据…</div>';
+
+  const qs = new URLSearchParams({ keyword, platforms: platforms.join(","), size: "30" });
+  try {
+    const resp = await fetch(apiUrl("/api/insights?" + qs.toString()));
+    const data = await resp.json();
+    if (data.enabled) {
+      renderAiInsights(data);
+    } else {
+      const reasonMap = {
+        no_api_key: "后端未配置 AI 密钥。请在部署环境设置 PC_AI_API_KEY（火山方舟 / OpenAI 兼容端点）后重试。",
+        no_products: "本次没有可分析的真实商品数据。",
+      };
+      box.innerHTML = `<div class="ai-error">${escapeHtml(reasonMap[data.reason] || data.message || ("AI 暂不可用（" + data.reason + "）"))}</div>`;
+    }
+  } catch (err) {
+    box.innerHTML = '<div class="ai-error">AI 请求失败：' + escapeHtml(err.message) + "</div>";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "重新分析";
+  }
+}
+
+function renderAiInsights(d) {
+  const box = document.getElementById("ai-insights");
+  const best = d.best_pick || {};
+  const tips = Array.isArray(d.tips) ? d.tips : [];
+  box.innerHTML = `
+    <div class="ai-headline">${escapeHtml(d.headline || "")}</div>
+    <div class="ai-grid">
+      <div class="ai-block ai-block--pick">
+        <div class="ai-block__label">最划算推荐</div>
+        <div class="ai-pick-name">${escapeHtml(best.name || "")}</div>
+        <div class="ai-pick-reason">${escapeHtml(best.reason || "")}</div>
+      </div>
+      <div class="ai-block">
+        <div class="ai-block__label">价格解读</div>
+        <p class="ai-text">${escapeHtml(d.price_view || "")}</p>
+        <div class="ai-block__label" style="margin-top:10px">平台差异</div>
+        <p class="ai-text">${escapeHtml(d.platform_view || "")}</p>
+      </div>
+    </div>
+    ${tips.length ? `<div class="ai-tips"><div class="ai-block__label">避坑 / 购买建议</div><ul>${
+      tips.map((t) => "<li>" + escapeHtml(t) + "</li>").join("")}</ul></div>` : ""}
+    <div class="ai-foot">由 ${escapeHtml(d.model || "AI")} 基于本次 ${d.total || 0} 条真实商品生成 · 仅供参考，价格以平台页面为准</div>
+  `;
+}
+
 
 /* ---------- KPI ---------- */
 const KPI_ICONS = {

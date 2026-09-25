@@ -1,0 +1,17 @@
+# -*- coding: utf-8 -*-
+"""AI 密钥本地配置模板。
+
+用法：复制本文件为同目录下 _ai_config.py（已 gitignore，不会提交），
+填入你的密钥；或直接设置环境变量（优先级更高）：
+  PC_AI_API_KEY / PC_AI_BASE_URL / PC_AI_MODEL
+
+默认端点为火山引擎方舟（Ark，OpenAI 兼容）：
+  1. 打开 https://console.volcengine.com/ark 注册并创建「推理接入点」；
+  2. 方舟新用户有免费额度，选择 doubao 系列模型；
+  3. 把 API Key 填入下方 AI_API_KEY，模型/接入点 ID 填入 AI_MODEL。
+也可换成任意 OpenAI 兼容服务（如 OpenAI 官方、其它网关），同步改 BASE_URL/MODEL。
+"""
+
+AI_API_KEY = ""  # 形如 "xxxx-xxxx-xxxx"
+AI_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
+AI_MODEL = "doubao-seed-1-6-flash-250828"  # 改为你的推理接入点 ID（ep-xxx）或模型 ID
