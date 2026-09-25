@@ -5,7 +5,7 @@
 不再在各处写死。键名与 PLATFORM_SPEC.md 保持一致，共 31 个平台。
 """
 
-# 全部平台键（31 个，顺序即展示顺序）
+# 全部平台键（顺序即展示顺序）；末尾两个 *cps 为官方 API 正规数据源
 ALL_PLATFORMS = [
     "jd", "taobao", "pdd", "tmall", "vip", "suning",
     "douyin", "kuaishou", "wechat", "xiaohongshu", "c1688",
@@ -14,6 +14,7 @@ ALL_PLATFORMS = [
     "tmallglobal", "jdglobal", "kaola", "douyinglobal",
     "temu", "shein", "tiktokshop", "aliexpress",
     "shopee", "lazada", "amazon",
+    "tb_cps", "jd_cps",
 ]
 
 # 键 -> 中文名
@@ -49,6 +50,8 @@ PLATFORM_NAMES = {
     "shopee": "Shopee",
     "lazada": "Lazada",
     "amazon": "Amazon",
+    "tb_cps": "淘宝联盟·官方API",
+    "jd_cps": "京东联盟·官方API",
 }
 
 # 键 -> 所属公司
@@ -65,4 +68,5 @@ PLATFORM_COMPANIES = {
     "temu": "PDD Holdings", "shein": "SHEIN", "tiktokshop": "字节跳动",
     "aliexpress": "阿里巴巴", "shopee": "Sea Group", "lazada": "阿里巴巴",
     "amazon": "亚马逊",
+    "tb_cps": "阿里巴巴(淘宝联盟)", "jd_cps": "京东集团(京东联盟)",
 }
