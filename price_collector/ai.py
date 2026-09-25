@@ -25,8 +25,10 @@ from typing import List, Dict, Any, Optional
 
 from .models import Product
 
-_DEFAULT_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
-_DEFAULT_MODEL = "doubao-seed-1-6-flash-250828"
+# 默认走智谱 GLM-4-Flash「永久免费」档（OpenAI 兼容），只需填 PC_AI_API_KEY。
+# 想换火山方舟/OpenAI 等再用 PC_AI_BASE_URL / PC_AI_MODEL 覆盖。
+_DEFAULT_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
+_DEFAULT_MODEL = "glm-4-flash"
 _TIMEOUT = 30
 _MAX_PRODUCTS_IN_PROMPT = 40
 

@@ -1,0 +1,19 @@
+{
+  "home_status": 200,
+  "health_status": 200,
+  "health_body": "{\"status\": \"ok\", \"service\": \"price-collector-api\", \"runtime\": \"python3.10\"}",
+  "search_status": 200,
+  "search_total": 16,
+  "search_source_mode": "live",
+  "search_recs": 16,
+  "search_top1": {
+    "name": "Wireless Earbuds Bluetooth 5.3 Headphones 40H Playback Noise Canceling Ear Buds with LED Power Display Charging Case IPX7 Waterproof Earphones with Mic Headset",
+    "score": 72.5,
+    "label": "性价比之王"
+  },
+  "search_has_platform_stats": 1,
+  "search_has_trend": 16,
+  "home_len": 5770,
+  "home_has_appjs": true,
+  "home_has_title": true
+}
