@@ -25,7 +25,8 @@ _SEARCH_URL = "https://www.amazon.com/s?k={kw}&page={page}"
 
 # 按商品区块 data-asin 切分后，在每块内提取字段
 _BLOCK_RE = re.compile(r'data-asin="([A-Z0-9]{10})"')
-_PRICE_RE = re.compile(r'class="a-offscreen">\$?\s*([\d.,]+)')
+# a-offscreen 内容形如 "$19.99" 或对中国 IP 返回 "CNY\xa03,819.85"：取标签后第一段数字
+_PRICE_RE = re.compile(r'class="a-offscreen">[^<]*?([0-9][0-9,]*(?:\.[0-9]+)?)')
 _ORIG_RE = re.compile(r'class="a-price-a10n[^"]*"[^>]*>.*?\$?\s*([\d.,]+)', re.S)
 _TITLE_RE = re.compile(r'<h2[^>]*>.*?<span[^>]*>([^<]+)</span>', re.S)
 _LINK_RE = re.compile(r'href="(/dp/[A-Z0-9]{10}[^"]*)"')
