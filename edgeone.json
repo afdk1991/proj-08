@@ -1,0 +1,5 @@
+{
+  "name": "price-collector-demo",
+  "nodeVersion": "24.18.0",
+  "outputDirectory": "deploy"
+}

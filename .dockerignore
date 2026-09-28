@@ -1,9 +1,0 @@
-__pycache__/
-**/__pycache__/
-*.pyc
-data/*.json
-data/*.csv
-.dockerignore
-Dockerfile
-.git/
-*.log
