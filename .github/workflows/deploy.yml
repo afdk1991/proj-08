@@ -66,4 +66,37 @@ jobs:
           EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
           PAGES_SOURCE: skills
         # makers deploy 同时部署静态文件与 cloud-functions（同域）
-        run: edgeone makers deploy ./deploy -n price-collector-demo -t "$EDGEONE_API_TOKEN"
+        # --json 输出供"项目守卫"解析 ProjectId；部署失败则本步直接失败（已带 -e）
+        run: edgeone makers deploy ./deploy -n price-collector-demo -t "$EDGEONE_API_TOKEN" --json > deploy_out.json
+
+      - name: Project guard (禁止新建 / 改名项目)
+        env:
+          EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
+          PAGES_SOURCE: skills
+        run: |
+          python - <<'PY'
+          import json, re, sys
+          EXPECT = "makers-w8in1esdzuub"
+          pid = None
+          try:
+              raw = open("deploy_out.json", encoding="utf-8").read()
+              m = re.search(r'"[Pp]rojectId"\s*:\s*"([^"]+)"', raw)
+              if m:
+                  pid = m.group(1)
+          except Exception:
+              pass
+          if not pid:
+              try:
+                  pid = json.load(open(".edgeone/project.json"))["ProjectId"]
+              except Exception:
+                  pass
+          print("解析到 ProjectId:", pid)
+          if pid is None:
+              print("⚠️ 无法解析 ProjectId，跳过硬性拦截（仅告警）")
+              sys.exit(0)
+          assert pid == EXPECT, (
+              f"项目守卫失败：期望 {EXPECT}，实际 {pid}"
+              f"（疑似新建或改名项目，已阻断部署）"
+          )
+          print("✅ 项目守卫通过：", pid)
+          PY

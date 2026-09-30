@@ -11,8 +11,8 @@
 |---|---|
 | 托管平台 | **EdgeOne Makers**（`edgeone` CLI，连接器版） |
 | 项目名 | `price-collector-demo` |
-| Project ID | `makers-s8bd7tcegqkv` |
-| 控制台 | https://console.cloud.tencent.com/edgeone/pages/project/makers-s8bd7tcegqkv |
+| Project ID | `makers-w8in1esdzuub` |
+| 控制台 | https://console.cloud.tencent.com/edgeone/pages/project/makers-w8in1esdzuub |
 | 部署形态 | 静态前端 + Python 云函数**同域**部署 |
 | 费用 | 免费套餐 |
 | Docker | **禁止使用**（不构建镜像、不起容器） |
@@ -53,6 +53,7 @@ deploy/
 │   ├── api/health.py                    # GET /api/health
 │   ├── api/search.py                    # GET /api/search
 │   ├── api/insights.py                  # GET /api/insights（AI 比价洞察）
+│   ├── api/netcheck.py                  # GET /api/netcheck（连通性自检）
 │   └── price_collector/                 # 🔴 采集包必须在这里
 └── price_collector/                     # 项目根兜底副本
 ```
@@ -69,7 +70,7 @@ deploy/
 - GitHub Secrets 要求：`EDGEONE_API_TOKEN`（必需）；
   `PC_CPS_TB_APPKEY` / `PC_CPS_TB_SECRET` / `PC_CPS_TB_ADZONE` / `PC_CPS_JD_APPKEY` / `PC_CPS_JD_SECRET`（可选，CPS 凭据）。
 - 工作流内置**项目守卫**：部署后解析 `--json` 的 `projectId`，
-  若不等于 `makers-s8bd7tcegqkv` 则判定为"疑似新建项目"并让任务失败告警。
+  若不等于 `makers-w8in1esdzuub` 则判定为"疑似新建项目"并让任务失败告警。
 
 ### 写入 Secret 的正确姿势（易踩坑）
 
