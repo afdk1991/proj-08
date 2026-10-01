@@ -43,7 +43,13 @@ def score_products(products: List) -> List[Dict]:
         return []
 
     prices = [p.price for p in products]
-    ratings = [p.shop_rating if p.shop_rating >= 0 else 5.0 for p in products]
+    # 缺失评分（-1）用「有效评分均值」填补；无任何有效评分时退回 3.0（中性）。
+    # 此前默认 5.0（满分）会让无评分商品反超真实 4.5~4.8 评分商品（P1 缺陷）。
+    # 当所有评分都缺失时，均值兜底为 3.0，所有 ratings 一致 → _norm 返回 0.5，
+    # rating_score 仍为 50，与旧版完全等价，不破坏现有排序。
+    valid_ratings = [p.shop_rating for p in products if p.shop_rating >= 0]
+    _rating_default = (sum(valid_ratings) / len(valid_ratings)) if valid_ratings else 3.0
+    ratings = [p.shop_rating if p.shop_rating >= 0 else _rating_default for p in products]
     # 销量归一化时对缺失销量做平滑（0 销量取 log1p(0)=0）
     sales_log = [math.log1p(max(p.sales, 0)) for p in products]
 
