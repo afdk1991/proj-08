@@ -92,7 +92,12 @@ python -c "import json,os,sys; sys.stdout.write(TOKEN)" | gh secret set EDGEONE_
 |---|---|
 | `GET /` | 200，返回前端首页 |
 | `GET /api/health` | 200，返回 `{"status":"ok","runtime":"python3.10"}`（证明云函数真在跑） |
-| `GET /api/search?keyword=蓝牙耳机&source=mock` | 200，返回 JSON 且 `total > 0`、`recommendations` 非空 |
+| `GET /api/search?keyword=蓝牙耳机` | 200，返回 JSON；重点看 `source_status` 字段（如实反映各平台 `ok/empty/needs_config/api_error`）与 `live_platforms` 计数 |
+
+> ⚠️ **验收口径已改正**：不得再用 `source=mock` 验收（该参数现在被忽略，永远走真实抓取 live）。
+> 由于云端/未知 IP 直接抓京东/淘宝/拼多多/苏宁会被反爬拦截，`total` 完全可能 = 0。
+> **正确的"成功"定义是：接口返回真实结构 + `source_status` 如实说明每个平台的可用状态**，而不是伪造/要求有数据。
+> 想让国内平台真正返回商品，见第 7 节「启用联盟 API」。
 
 ### 访问鉴权说明
 
@@ -112,6 +117,52 @@ python -c "import json,os,sys; sys.stdout.write(TOKEN)" | gh secret set EDGEONE_
 | `npm error ... edgesOut` | 用了 `npx` | 改 `npm install -g` |
 | 云函数 500 且带 ImportError | 辅助模块缺失 | 见上面第 2 节结构约束 |
 | 页面空白无数据 | 前端 `fetch('/api/search')` 失败 | 先 curl 验 API，再看前端 |
+
+---
+
+## 7. 真实抓取状态与如何启用国内数据（联盟 API）
+
+本项目**已实现真实抓取流水线**（非 mock）：`pipeline.run()` 并发调用各平台 `fetch()`，
+结果经清洗/评分/推荐后返回。但"能否抓到真实商品"取决于数据源是否被反爬拦截、以及是否配置了联盟 API 凭据。
+
+### 7.1 当前真实状态（云端 IP 实测）
+
+| 平台 | 状态 | 原因 |
+|---|---|---|
+| `amazon` | `empty`（偶发 `ok`） | 海外站对此 IP 较宽松，但会限流，不稳定 |
+| `jd` / `taobao` / `pdd` / `suning` / `tmall` … | `empty` | 直连被反爬/风控拦截（验证页 / 403 / 空壳），免密无法穿透 |
+| `tb_cps`（淘宝联盟） | `api_error: scope ids is 381 …` | 现有淘宝联盟账号**未开通** `taobao.tbk.dg.material.optional`（通用物料搜索）权限 |
+| `jd_cps`（京东联盟） | `needs_config` | 未填写京东联盟 AppKey/Secret |
+| 其它 30+ 平台 | `empty` | 同上，反爬拦截 |
+
+> 结论：**不是"没写抓取代码"，而是被反爬 + 联盟权限双重阻断，且历史代码静默吞错让人误以为没实现。**
+> 现每个平台状态已如实上报（见 `source_status`），不再静默空结果。
+
+### 7.2 启用真实国内数据的唯一正道：联盟官方 API
+
+国内电商（京东/淘宝/拼多多/苏宁）**合规且稳定的真实来源是各平台联盟开放 API**，不是网页爬虫。
+项目已内置 `tb_cps` / `jd_cps` 两个官方 API 源，配置好凭据即返回真实商品+价格：
+
+**淘宝/天猫（tb_cps）**
+1. 登录 [pub.alimama.com](https://pub.alimama.com) 注册淘宝客，拿到 AppKey / AppSecret / 推广位 adzone_id。
+2. **申请 `taobao.tbk.dg.material.optional` 接口权限**（当前账号缺此权限，状态会显示 `api_error`）。
+3. 把凭据写入（二选一）：
+   - 环境变量：`PC_CPS_TB_APPKEY` / `PC_CPS_TB_SECRET` / `PC_CPS_TB_ADZONE`
+   - 或 `price_collector/_cps_config.py`（已存在，含占位值）
+   - 或 GitHub Secret（CI 用）：`PC_CPS_TB_APPKEY` 等
+
+**京东（jd_cps）**
+1. 登录 [union.jd.com](https://union.jd.com) 注册京东联盟，创建应用拿 AppKey / AppSecret，申请 `jd.union.open.goods.query` 权限。
+2. 填写 `PC_CPS_JD_APPKEY` / `PC_CPS_JD_SECRET`（当前为空）。
+
+配置就绪后，`tb_cps`/`jd_cps` 的 `can_live()` 返回 True，fetch 走官方 API 返回真实数据，
+`source_status` 变为 `ok`，`live_platforms` 增加，前端比价立即有真实商品。
+
+### 7.3 备选：浏览器渲染 + 代理爬虫（需另建基础设施）
+
+若要"免密钥直连抓京东/淘宝"，必须突破反爬：需要 **Playwright/无头浏览器 + 住宅代理/IP 轮换**，
+且目标站常需登录态 Cookie。这套不在本免费 stdlib 云函数支持范围内，需独立部署
+（容器 + 浏览器二进制 + 代理池），属于另一条技术栈，不在本项目交付内。
 
 ---
 

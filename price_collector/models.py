@@ -62,6 +62,8 @@ class SearchResult:
     recommendations: List[Dict[str, Any]]     # 性价比推荐
     source_mode: str                          # 固定为 live（已无示例/mock 路径）
     collected_at: str
+    source_status: Dict[str, str] = field(default_factory=dict)  # 平台->状态（透明化，避免静默空结果）
+    live_platforms: int = 0                   # 实际返回数据的平台数
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -74,4 +76,6 @@ class SearchResult:
             "recommendations": self.recommendations,
             "source_mode": self.source_mode,
             "collected_at": self.collected_at,
+            "source_status": self.source_status,
+            "live_platforms": self.live_platforms,
         }

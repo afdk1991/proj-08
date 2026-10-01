@@ -17,6 +17,7 @@ class BaseSource(ABC):
 
     platform: str = ""      # 平台标识
     platform_name: str = ""  # 平台中文名
+    last_error: str = ""     # 最近一次 fetch 失败原因（透明化，便于前端/调试定位）
 
     @abstractmethod
     def fetch(self, keyword: str, page: int = 1, page_size: int = 20) -> List[Product]:
@@ -26,6 +27,14 @@ class BaseSource(ABC):
     def can_live(self) -> bool:
         """该类是否具备真实联网抓取能力。"""
         return False
+
+    def status_hint(self) -> str:
+        """返回该源当前的可用状态提示（供前端展示）。"""
+        if not self.can_live():
+            return "needs_config"
+        if self.last_error:
+            return f"api_error:{self.last_error[:60]}"
+        return "ready"
 
 
 class SourceFactory:

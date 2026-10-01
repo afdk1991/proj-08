@@ -7,7 +7,7 @@
 """
 import os
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from .models import SearchResult, Product
 from .sources.base import SourceFactory
@@ -48,7 +48,9 @@ def run(
     if not platforms:
         platforms = list(known)
 
-    raw: List[Product] = _fetch_live(keyword, platforms, page, page_size)
+    raw: List[Product]
+    source_status: Dict[str, str]
+    raw, source_status = _fetch_live(keyword, platforms, page, page_size)
 
     # 清洗去重（默认不剔除离群值，保留全部价格样本，包括最便宜的好货）
     cleaned = cleaning.clean(raw, dedup=dedup, remove_outliers=False)
@@ -65,6 +67,8 @@ def run(
     platform_stats = analysis.build_platform_stats(sorted_products)
     distribution = analysis.build_price_distribution(sorted_products)
 
+    live_platforms = sum(1 for v in source_status.values() if v == "ok")
+
     return SearchResult(
         keyword=keyword,
         total=len(sorted_products),
@@ -76,27 +80,51 @@ def run(
         recommendations=recommendations,
         source_mode="live",
         collected_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        source_status=source_status,
+        live_platforms=live_platforms,
     )
 
 
-def _fetch_live(keyword: str, platforms: List[str], page: int, page_size: int) -> List[Product]:
+def _fetch_live(keyword: str, platforms: List[str], page: int, page_size: int):
     """并发抓取各平台；不传入全局 cookie，各源自行读取 PC_COOKIE_<KEY> / PC_COOKIE。
 
     用线程池并发跑所有平台，总耗时 ≈ 最慢一个源（而非 N 个之和），
     避免云端函数因串行超时触发 504。单源失败/被拦截一律返回 []，不影响其它源。
+
+    返回 (products, source_status)：source_status 把每个平台状态如实记录，
+    避免「静默空结果」让人误以为没实现抓取：
+      - ok           : 抓到真实商品
+      - needs_config : 缺凭据/联盟密钥（如未配京东联盟密钥、淘宝联盟账号无权限）
+      - api_error:*  : 联盟 API 返回错误（如权限不足 isv.permission-api-package-limit）
+      - empty        : 源可用但未返回数据（多为反爬验证页/风控拦截）
+      - error:*      : 抓取过程异常
+      - unavailable  : 源不可用
     """
     try:
         timeout = int(os.environ.get("PC_TIMEOUT", "10"))
     except ValueError:
         timeout = 10
 
+    status: Dict[str, str] = {}
+
     def _fetch_one(pf: str):
         try:
             src = SourceFactory.create(pf, timeout=timeout)
             if not src.can_live():
+                status[pf] = "needs_config"
                 return []
-            return src.fetch(keyword, page=page, page_size=page_size)
+            try:
+                res = src.fetch(keyword, page=page, page_size=page_size)
+            except Exception as e:
+                status[pf] = f"error:{type(e).__name__}"
+                return []
+            if res:
+                status[pf] = "ok"
+            else:
+                status[pf] = src.status_hint() if getattr(src, "last_error", "") else "empty"
+            return res
         except Exception:
+            status[pf] = "unavailable"
             return []
 
     from concurrent.futures import ThreadPoolExecutor
@@ -105,4 +133,4 @@ def _fetch_live(keyword: str, platforms: List[str], page: int, page_size: int) -
     with ThreadPoolExecutor(max_workers=workers) as ex:
         for res in ex.map(_fetch_one, platforms):
             products.extend(res)
-    return products
+    return products, status

@@ -77,6 +77,10 @@ class TbCpsSource(BaseSource):
             req = urllib.request.Request(url, headers={"User-Agent": "price-collector/1.0"})
             with urllib.request.urlopen(req, timeout=self.timeout) as r:
                 data = json.loads(r.read().decode("utf-8", "ignore"))
+            if "error_response" in data:
+                err = data["error_response"]
+                self.last_error = (err.get("sub_msg") or err.get("msg") or "api_error")
+                return []
             resp = data.get("tbk_dg_material_optional_response", {})
             rows = (resp.get("result_list") or {}).get("map_data") or []
             out: List[Product] = []
