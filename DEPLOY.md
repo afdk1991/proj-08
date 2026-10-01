@@ -129,7 +129,8 @@ python -c "import json,os,sys; sys.stdout.write(TOKEN)" | gh secret set EDGEONE_
 
 | 平台 | 状态 | 原因 |
 |---|---|---|
-| `amazon` | `empty`（偶发 `ok`） | 海外站对此 IP 较宽松，但会限流，不稳定 |
+| **`dangdang` 当当网** | **`ok`** ✅ | **免密钥真实抓取**：当当搜索页为静态 HTML 承载商品、对机房/云端 IP 无强制风控。实测 0.4s 返回约 60 条真实商品（名称 / 现价 / 定价 / 店铺 / 详情链接），是全项目首个稳定可用的**国内**真实源。字段取自 `p.price span.price_n`（现价）、`span.price_r`（定价）、`p.name a[title]`、`p.link a[title]` |
+| `amazon` | `ok`（偶发 `empty`） | 海外站对此 IP 较宽松，偶尔限流返回空 |
 | `jd` / `taobao` / `pdd` / `suning` / `tmall` … | `empty` | 直连被反爬/风控拦截（验证页 / 403 / 空壳），免密无法穿透 |
 | `tb_cps`（淘宝联盟） | `api_error: scope ids is 381 …` | 现有淘宝联盟账号**未开通** `taobao.tbk.dg.material.optional`（通用物料搜索）权限 |
 | `jd_cps`（京东联盟） | `needs_config` | 未填写京东联盟 AppKey/Secret |
@@ -138,10 +139,13 @@ python -c "import json,os,sys; sys.stdout.write(TOKEN)" | gh secret set EDGEONE_
 > 结论：**不是"没写抓取代码"，而是被反爬 + 联盟权限双重阻断，且历史代码静默吞错让人误以为没实现。**
 > 现每个平台状态已如实上报（见 `source_status`），不再静默空结果。
 
-### 7.2 启用真实国内数据的唯一正道：联盟官方 API
+### 7.2 京东 / 淘宝 / 拼多多：需用联盟官方 API（当当已可免密钥直连）
 
-国内电商（京东/淘宝/拼多多/苏宁）**合规且稳定的真实来源是各平台联盟开放 API**，不是网页爬虫。
-项目已内置 `tb_cps` / `jd_cps` 两个官方 API 源，配置好凭据即返回真实商品+价格：
+> ✅ **好消息**：国内数据不必全靠联盟 API —— **当当网已实现免密钥真实抓取**（见 7.1），
+> 搜索当当即可拿到真实商品参与比价，无需任何账号、权限或密钥。
+
+但若还需**京东 / 淘宝 / 天猫 / 拼多多**的真实数据，因其网页直连被反爬系统性拦截，
+合规且稳定的来源仍是各平台联盟开放 API（非网页爬虫）。项目已内置 `tb_cps` / `jd_cps`，配置好凭据即返回真实商品+价格：
 
 **淘宝/天猫（tb_cps）**
 1. 登录 [pub.alimama.com](https://pub.alimama.com) 注册淘宝客，拿到 AppKey / AppSecret / 推广位 adzone_id。

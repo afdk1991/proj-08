@@ -2,14 +2,14 @@
 """平台权威注册表（单一事实源）。
 
 键名 / 中文名在此统一定义，前端、分析、CLI 全部从这里派生，
-不再在各处写死。键名与 PLATFORM_SPEC.md 保持一致，共 31 个平台。
+不再在各处写死。键名与 PLATFORM_SPEC.md 保持一致，共 32 个平台。
 """
 
 # 全部平台键（顺序即展示顺序）；末尾两个 *cps 为官方 API 正规数据源
 ALL_PLATFORMS = [
     "jd", "taobao", "pdd", "tmall", "vip", "suning",
     "douyin", "kuaishou", "wechat", "xiaohongshu", "c1688",
-    "meituan", "jdnow", "tbflash", "hema",
+    "meituan", "jdnow", "tbflash", "hema", "dangdang",
     "dewu", "yanxuan", "miyoupin", "xianyu", "zhuanzhuan",
     "tmallglobal", "jdglobal", "kaola", "douyinglobal",
     "temu", "shein", "tiktokshop", "aliexpress",
@@ -34,6 +34,7 @@ PLATFORM_NAMES = {
     "jdnow": "京东秒送",
     "tbflash": "淘宝闪购",
     "hema": "盒马",
+    "dangdang": "当当网",
     "dewu": "得物",
     "yanxuan": "网易严选",
     "miyoupin": "小米有品",
@@ -60,7 +61,7 @@ PLATFORM_COMPANIES = {
     "tmall": "阿里巴巴", "vip": "唯品会", "suning": "苏宁易购",
     "douyin": "字节跳动", "kuaishou": "快手", "wechat": "腾讯",
     "xiaohongshu": "小红书", "c1688": "阿里巴巴",
-    "meituan": "美团", "jdnow": "京东集团", "tbflash": "阿里巴巴", "hema": "阿里巴巴",
+    "meituan": "美团", "jdnow": "京东集团", "tbflash": "阿里巴巴", "hema": "阿里巴巴", "dangdang": "当当网",
     "dewu": "上海识装科技", "yanxuan": "网易", "miyoupin": "小米集团",
     "xianyu": "阿里巴巴", "zhuanzhuan": "转转集团",
     "tmallglobal": "阿里巴巴", "jdglobal": "京东集团", "kaola": "阿里巴巴",
