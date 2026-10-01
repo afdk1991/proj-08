@@ -10,7 +10,9 @@ import urllib.request
 import http.cookiejar
 
 REPO = "afdk1991/proj-08"
-BASE = "https://price-collector-demo-j4ml6bw0.edgeone.cool"
+# ⚠️ 旧域名 price-collector-demo-j4ml6bw0 属于已被替代的旧项目实例（ProjectId s8bd...），已 404 勿再用。
+# 当前有效实例 ProjectId=makers-w8in1esdzuub，域名随该实例；每次部署只换 eo_token，域名不变。
+BASE = "https://price-collector-demo-tfslpb0f.edgeone.cool"
 
 
 def run(args, timeout=180):
@@ -76,12 +78,13 @@ def get(path, label):
 get("/", "index")
 get("/api/health", "health")
 kw = urllib.parse.quote("蓝牙耳机")
-get("/api/search?keyword=" + kw + "&source=mock", "search")
+# 注意：不得再加 "source=mock" —— mock 路径已移除，且用它验收会掩盖真实抓取是否有数据
+se = "&" if token_qs else ""
+get("/api/search?keyword=" + kw, "search")
 
 # 4) 结构化解析 search
 try:
-    sep = "&"
-    u = BASE + "/api/search?keyword=" + kw + "&source=mock" + sep + token_qs
+    u = BASE + "/api/search?keyword=" + kw + se + token_qs
     with opener.open(u, timeout=90) as r:
         data = json.loads(r.read().decode("utf-8"))
     recs = data.get("recommendations") or [{}]
