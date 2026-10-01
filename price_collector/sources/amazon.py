@@ -7,7 +7,8 @@
   - Amazon 反爬极强，本机直连静态抓取常返回 HTTP 503 / 验证码页
     （“Enter the characters you see below”），此时 HTML 不含商品；
   - 偶发放行时，结果页每个商品以 data-asin 区块承载，价格在
-    <span class="a-offscreen"> 内、链接 /dp/<ASIN>、主图 m.media-amazon.com，
+    <span class="a-offscreen"> 内、主图 m.media-amazon.com，
+    详情链接不再直接出现在 href 中（实测 0 个 /dp/ href），改为用 ASIN 拼 /dp/<ASIN>，
     本类按区块逐块提取字段。
 本类仅做公开网页静态抓取 + 标准 UA，不做验证码破解/代理池；抓不到即返回
 空列表，绝不外抛、不伪造数据。海外站价格以美元计，price 填页面原价数值。
@@ -29,7 +30,8 @@ _BLOCK_RE = re.compile(r'data-asin="([A-Z0-9]{10})"')
 _PRICE_RE = re.compile(r'class="a-offscreen">[^<]*?([0-9][0-9,]*(?:\.[0-9]+)?)')
 _ORIG_RE = re.compile(r'class="a-price-a10n[^"]*"[^>]*>.*?\$?\s*([\d.,]+)', re.S)
 _TITLE_RE = re.compile(r'<h2[^>]*>.*?<span[^>]*>([^<]+)</span>', re.S)
-_LINK_RE = re.compile(r'href="(/dp/[A-Z0-9]{10}[^"]*)"')
+# 注：现代 Amazon 结果页的详情链接已不再是 "/dp/<ASIN>" 开头的 href
+# （实测整页 0 个 /dp/ href），故直接用商品自身的 data-asin 拼 canonical 地址。
 _IMG_RE = re.compile(r'src="(https://m\.media-amazon\.com/images/[^"]+\.(?:jpe?g|png|webp)[^"]*)"')
 
 
@@ -70,10 +72,11 @@ class AmazonSource(BaseSource):
     def _parse(html: str, keyword: str) -> List[Product]:
         result: List[Product] = []
         # 用 data-asin 出现位置把 HTML 切成逐商品块，避免价格/标题错位
-        starts = [m.start() for m in _BLOCK_RE.finditer(html)]
-        starts.append(len(html))
-        for i in range(len(starts) - 1):
+        matches = list(_BLOCK_RE.finditer(html))
+        starts = [m.start() for m in matches] + [len(html)]
+        for i in range(len(matches)):
             try:
+                asin = matches[i].group(1)
                 block = html[starts[i]:starts[i + 1]]
                 pm = _PRICE_RE.search(block)
                 if not pm:
@@ -82,11 +85,10 @@ class AmazonSource(BaseSource):
                 if p <= 0:
                     continue
                 tm = _TITLE_RE.search(block)
-                lm = _LINK_RE.search(block)
                 im = _IMG_RE.search(block)
                 om = _ORIG_RE.search(block)
                 name = tm.group(1).strip() if tm else keyword
-                url = ("https://www.amazon.com" + lm.group(1)) if lm else ""
+                url = f"https://www.amazon.com/dp/{asin}" if asin else ""
                 img = im.group(1) if im else ""
                 original = _http.parse_price(om.group(1)) if om else 0.0
                 result.append(Product(

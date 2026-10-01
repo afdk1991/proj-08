@@ -39,11 +39,18 @@ from ..models import Product
 _SEARCH_URL = "https://search.dangdang.com/?key={kw}&act=input&page_index={page}"
 
 # 每个商品被包裹在独立 <li> 块中，按块提取可避免字段错位
-_PRICE_N_RE = re.compile(r'<span class="price_n">\s*&yen;\s*([0-9]+(?:\.[0-9]+)?)', re.I)
-_PRICE_R_RE = re.compile(r'<span class="price_r">\s*&yen;\s*([0-9]+(?:\.[0-9]+)?)', re.I)
 _NAME_RE = re.compile(r'<p class="name"[^>]*>\s*<a\s+title="([^"]*)"\s+href="([^"]+)"', re.I | re.S)
 _SHOP_RE = re.compile(r'<p class="link"[^>]*>\s*<a[^>]*?title="([^"]*)"', re.I | re.S)
-_IMG_RE = re.compile(r'(?:data-original|src)="(//img[^"]+\.(?:jpe?g|png|webp))"', re.I)
+# 图片属性既可能用双引号也可能用单引号（图书与百货两种模板不同），必须都兼容
+_IMG_RE = re.compile(r"""(?:data-original|src)\s*=\s*["'](//img[^"']+\.(?:jpe?g|png|webp))["']""", re.I)
+
+# 价签有两种模板（实测）：
+#   百货：<p class="price"><span class="price_n">&yen;15.20</span><span class="price_r">&yen;22.40</span>
+#   图书：<span class="search_now_price">&yen;59.80</span><span class="search_pre_price">&yen;89.00</span>
+# 只认其中一种会漏掉绝大多数商品，故做成标记名列表按序查找其后首个 &yen; 数值。
+_NOW_MARKERS = ("search_now_price", "price_n")
+_PRE_MARKERS = ("search_pre_price", "price_r")
+_YEN_RE = re.compile(r"&yen;\s*([0-9]+(?:\.[0-9]+)?)")
 
 
 class DangdangSource(BaseSource):
@@ -78,8 +85,23 @@ class DangdangSource(BaseSource):
             if rendered:
                 result = self._parse(rendered, keyword)
         if not result:
-            self.last_error = "empty: 无商品块（可能被风控或无搜索结果）"
+            # 区分「平台确实无此商品」与「被风控拦截」，避免误报
+            if html and ("没有找到" in html or "抱歉" in html):
+                self.last_error = "empty: 当当无该关键词商品（非风控，真实无结果）"
+            else:
+                self.last_error = "empty: 无商品块（可能被风控或页面结构变更）"
         return result[:page_size]
+
+    @staticmethod
+    def _extract_price(chunk: str, markers) -> str:
+        """在 chunk 中按 marker 顺序找出现价/定价：定位标记后取其附近首个 &yen; 数值。"""
+        for mk in markers:
+            i = chunk.find(mk)
+            if i >= 0:
+                m = _YEN_RE.search(chunk[i:i + 260])
+                if m:
+                    return m.group(1)
+        return ""
 
     @staticmethod
     def _parse(html: str, keyword: str) -> List[Product]:
@@ -94,10 +116,10 @@ class DangdangSource(BaseSource):
                 nm = _NAME_RE.search(chunk)
                 if not nm:
                     continue
-                pm = _PRICE_N_RE.search(chunk)
-                if not pm:
+                now = DangdangSource._extract_price(chunk, _NOW_MARKERS)
+                if not now:
                     continue  # 无价格视为非商品块（广告/推荐位）
-                price = _http.parse_price(pm.group(1))
+                price = _http.parse_price(now)
                 if price <= 0:
                     continue
                 name = (nm.group(1) or "").strip()
@@ -108,8 +130,8 @@ class DangdangSource(BaseSource):
                     url = "https:" + raw_url
                 else:
                     url = urllib.parse.urljoin("https://search.dangdang.com/", raw_url)
-                om = _PRICE_R_RE.search(chunk)
-                original = _http.parse_price(om.group(1)) if om else 0.0
+                pre = DangdangSource._extract_price(chunk, _PRE_MARKERS)
+                original = _http.parse_price(pre) if pre else 0.0
                 sm = _SHOP_RE.search(chunk)
                 shop = (sm.group(1) or "").strip() if sm else ""
                 im = _IMG_RE.search(chunk)

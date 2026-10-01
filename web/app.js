@@ -1,12 +1,12 @@
 /* 比价探针前端逻辑：调用后端 /api/search 并渲染结果与图表 */
 
-/* 33 平台权威清单（与后端 price_collector/sources/registry.py 一致） */
+/* 34 平台权威清单（与后端 price_collector/sources/registry.py 保持一致） */
 const PLATFORMS = [
   ["jd", "京东"], ["taobao", "淘宝"], ["pdd", "拼多多"], ["tmall", "天猫"],
   ["vip", "唯品会"], ["suning", "苏宁易购"], ["douyin", "抖音电商"],
   ["kuaishou", "快手电商"], ["wechat", "微信小店"], ["xiaohongshu", "小红书"],
   ["c1688", "1688"],
-  ["meituan", "美团闪购"], ["jdnow", "京东秒送"], ["tbflash", "淘宝闪购"], ["hema", "盒马"],
+  ["meituan", "美团闪购"], ["jdnow", "京东秒送"], ["tbflash", "淘宝闪购"], ["hema", "盒马"], ["dangdang", "当当网"],
   ["dewu", "得物"], ["yanxuan", "网易严选"], ["miyoupin", "小米有品"],
   ["xianyu", "闲鱼"], ["zhuanzhuan", "转转"],
   ["tmallglobal", "天猫国际"], ["jdglobal", "京东国际"], ["kaola", "考拉海购"], ["douyinglobal", "抖音全球购"],
@@ -19,7 +19,7 @@ const PLATFORM_COLORS = {
   jd: "#e1251b", taobao: "#ff6a00", pdd: "#d9264d", tmall: "#ff0036",
   vip: "#e60012", suning: "#ff6600", douyin: "#161823", kuaishou: "#ff4906",
   wechat: "#07c160", xiaohongshu: "#ff2442", c1688: "#ff7300",
-  meituan: "#f6a700", jdnow: "#e1251b", tbflash: "#ff6a00", hema: "#1ba05c",
+  meituan: "#f6a700", jdnow: "#e1251b", tbflash: "#ff6a00", hema: "#1ba05c", dangdang: "#d7263d",
   dewu: "#161823", yanxuan: "#c0392b", miyoupin: "#ff6700", xianyu: "#f5c518", zhuanzhuan: "#ff6a00",
   tmallglobal: "#ff0036", jdglobal: "#e1251b", kaola: "#00a0e9", douyinglobal: "#161823",
   temu: "#fb7701", shein: "#f50046", tiktokshop: "#000000", aliexpress: "#e62e04",
